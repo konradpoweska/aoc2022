@@ -1,6 +1,14 @@
 use std::borrow::Borrow;
 
-pub fn parse_elves<I>(lines: I) -> Vec<u32>
+pub fn run() {
+    let elves = parse_elves(lines_from_stdin());
+    let result_part1 = solve_part1(&elves);
+    let result_part2 = solve_part2(&elves);
+    println!("Part 1: {}", result_part1);
+    println!("Part 2: {}", result_part2);
+}
+
+fn parse_elves<I>(lines: I) -> Vec<u32>
 where
     I: IntoIterator,
     I::Item: Borrow<str>,
@@ -29,21 +37,13 @@ fn solve_part1(elves: &Vec<u32>) -> u32 {
     elves.iter().max().expect("Max couldn't be found").clone()
 }
 
-pub fn solve_part2(elves: &Vec<u32>) -> u32 {
+fn solve_part2(elves: &Vec<u32>) -> u32 {
     let mut elves = elves.clone();
     elves.sort_unstable_by(|a, b| b.cmp(a));
     elves[..3].iter().fold(0, |a, b| a + b)
 }
 
-pub fn run() {
-    let elves = parse_elves(lines_from_stdin());
-    let result_part1 = solve_part1(&elves);
-    let result_part2 = solve_part2(&elves);
-    println!("Part 1: {}", result_part1);
-    println!("Part 2: {}", result_part2);
-}
-
-pub fn lines_from_stdin() -> impl Iterator<Item = String> {
+fn lines_from_stdin() -> impl Iterator<Item = String> {
     std::io::stdin().lines().map(|e| e.expect("Invalid line"))
 }
 
