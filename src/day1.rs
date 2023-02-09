@@ -1,11 +1,13 @@
+use crate::utils::lines_from_stdin;
 use std::borrow::Borrow;
 
-pub fn run() {
+pub fn run() -> Result<(), &'static str> {
     let elves = parse_elves(lines_from_stdin());
-    let result_part1 = solve_part1(&elves);
+    let result_part1 = solve_part1(&elves)?;
     let result_part2 = solve_part2(&elves);
     println!("Part 1: {}", result_part1);
     println!("Part 2: {}", result_part2);
+    Ok(())
 }
 
 fn parse_elves<I>(lines: I) -> Vec<u32>
@@ -33,18 +35,18 @@ where
     elves
 }
 
-fn solve_part1(elves: &Vec<u32>) -> u32 {
-    elves.iter().max().expect("Max couldn't be found").clone()
+fn solve_part1(elves: &Vec<u32>) -> Result<u32, &'static str> {
+    elves
+        .iter()
+        .max()
+        .map(u32::clone)
+        .ok_or("Max couldn't be found")
 }
 
 fn solve_part2(elves: &Vec<u32>) -> u32 {
     let mut elves = elves.clone();
     elves.sort_unstable_by(|a, b| b.cmp(a));
-    elves[..3].iter().fold(0, |a, b| a + b)
-}
-
-fn lines_from_stdin() -> impl Iterator<Item = String> {
-    std::io::stdin().lines().map(|e| e.expect("Invalid line"))
+    elves[..3].iter().sum()
 }
 
 #[cfg(test)]
@@ -76,7 +78,7 @@ pub mod test {
     #[test]
     fn solution_part1() {
         let elves = vec![6000, 4000, 11000, 24000, 10000];
-        let result = super::solve_part1(&elves);
+        let result = super::solve_part1(&elves).expect("Couldn't solve");
         assert_eq!(result, 24000);
     }
 
