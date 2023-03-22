@@ -1,16 +1,6 @@
-use crate::utils::lines_from_stdin;
 use std::borrow::Borrow;
 
-pub fn run() -> Result<(), &'static str> {
-    let elves = parse_elves(lines_from_stdin());
-    let result_part1 = solve_part1(&elves)?;
-    let result_part2 = solve_part2(&elves);
-    println!("Part 1: {}", result_part1);
-    println!("Part 2: {}", result_part2);
-    Ok(())
-}
-
-fn parse_elves<I>(lines: I) -> Vec<u32>
+pub fn parse_elves<I>(lines: I) -> Vec<u32>
 where
     I: IntoIterator,
     I::Item: Borrow<str>,
@@ -35,7 +25,7 @@ where
     elves
 }
 
-fn solve_part1(elves: &Vec<u32>) -> Result<u32, &'static str> {
+pub fn solve_part1(elves: &Vec<u32>) -> Result<u32, &'static str> {
     elves
         .iter()
         .max()
@@ -43,14 +33,14 @@ fn solve_part1(elves: &Vec<u32>) -> Result<u32, &'static str> {
         .ok_or("Max couldn't be found")
 }
 
-fn solve_part2(elves: &Vec<u32>) -> u32 {
+pub fn solve_part2(elves: &Vec<u32>) -> u32 {
     let mut elves = elves.clone();
     elves.sort_unstable_by(|a, b| b.cmp(a));
     elves[..3].iter().sum()
 }
 
 #[cfg(test)]
-pub mod test {
+mod test {
     use super::*;
 
     const INPUT: &str = "\

@@ -3,9 +3,9 @@ mod p1;
 mod p2;
 
 use self::common::{parse_lines, solve};
-use self::p1::RoundPart1;
-use self::p2::RoundPart2;
-use crate::utils::lines_from_stdin;
+use p1::RoundPart1;
+use p2::RoundPart2;
+use ::common::lines_from_stdin;
 
 pub fn run() -> Result<(), &'static str> {
     let letters = parse_lines(lines_from_stdin())?;
