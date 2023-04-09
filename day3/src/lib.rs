@@ -1,74 +1,83 @@
-use std::borrow::Borrow;
+#![feature(iter_array_chunks)]
+use std::{
+    borrow::Borrow,
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
-use common::lines_from_stdin;
+pub fn run(filename: &str) -> Result<(), &'static str> {
+    let solution_p1 = solve_p1(lines_from_file(&filename)?)?;
+    let solution_p2 = solve_p2(lines_from_file(&filename)?)?;
 
-pub fn run() -> Result<(), &'static str> {
-    let solution = solve_p1(lines_from_stdin())?;
-    println!("Part 1 solution: {solution}");
+    println!("Part 1 solution: {}", solution_p1);
+    println!("Part 2 solution: {}", solution_p2);
+
     Ok(())
 }
 
-#[derive(Debug)]
-struct Rucksack(Compartment, Compartment);
-
-impl Rucksack {
-    fn parse(line: &str) -> Result<Self, &'static str> {
-        let (left, right) = line.split_at(line.len() / 2);
-        Ok(Rucksack(
-            Compartment::parse(left)?,
-            Compartment::parse(right)?,
-        ))
-    }
-    fn shared_item_priority(&self) -> u32 {
-        Compartment::shared_item_priority(&self.0, &self.1)
-    }
+fn lines_from_file(filename: &str) -> Result<impl Iterator<Item = String>, &'static str> {
+    let file = File::open(&filename).or(Err("Couldn't open file."))?;
+    Ok(BufReader::new(file).lines().map(Result::unwrap))
 }
 
-#[derive(Clone, Copy, Debug)]
-struct Compartment(u64);
-
-impl Compartment {
-    fn parse(line: &str) -> Result<Self, &'static str> {
-        let mut compartment = Compartment(0);
-        for char in line.chars() {
-            compartment.add(char)?
-        }
-        Ok(compartment)
+fn build_base(definition: &&str) -> Result<u64, &'static str> {
+    let mut result: u64 = 0;
+    for char in definition.chars() {
+        let priority = priority_of_item(char)?;
+        result |= 1u64 << priority;
     }
-    fn add(&mut self, item: char) -> Result<(), &'static str> {
-        let priority = priority_of_item(item).ok_or("Couldn't parse item")?;
-        self.0 |= 1u64 << priority;
-        Ok(())
-    }
-    fn shared_item_priority(left: &Self, right: &Self) -> u32 {
-        // returns only the smallest priority
-        (left.0 & right.0).trailing_zeros()
-    }
+    return Ok(result);
 }
 
-fn priority_of_item(char: char) -> Option<u64> {
-    let item = char as u64;
+fn priority_of_item(char: char) -> Result<u32, &'static str> {
+    let item = char as u32;
     if item >= 65 && item <= 90 {
-        return Some(item - 38);
+        return Ok(item - 38);
     }
     if item >= 97 && item <= 122 {
-        return Some(item - 96);
+        return Ok(item - 96);
     }
-    None
+    Err("Couldn't parse item")
 }
 
-fn solve_p1<I>(lines: I) -> Result<u32, &'static str>
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-{
-    let rucksacks = lines
-        .into_iter()
-        .map(|line| Rucksack::parse(line.borrow()))
-        .collect::<Result<Vec<_>, _>>()?;
+fn solve_p1(lines: impl Iterator<Item = impl Borrow<str>>) -> Result<u32, &'static str> {
+    Ok(lines
+        .map(|line| {
+            let line = line.borrow();
+            let (left, right) = line.split_at(line.len() / 2);
+            get_duplicated_item_priority([left, right])
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .iter()
+        .sum())
+}
 
-    let sum = rucksacks.iter().map(Rucksack::shared_item_priority).sum();
-    Ok(sum)
+fn solve_p2(lines: impl Iterator<Item = impl Borrow<str>>) -> Result<u32, &'static str> {
+    Ok(lines
+        .array_chunks::<3>()
+        .map(|[a, b, c]| get_duplicated_item_priority([a.borrow(), b.borrow(), c.borrow()]))
+        .collect::<Result<Vec<_>, _>>()?
+        .iter()
+        .sum())
+}
+
+fn get_duplicated_item_priority<const T: usize>(items: [&str; T]) -> Result<u32, &'static str> {
+    let mut iter = items.iter();
+    let first = iter.next().ok_or("Not enough items")?;
+
+    let a = iter
+        .map(build_base)
+        .reduce(|a, b| Ok(a? & b?))
+        .ok_or("Not enough items")??;
+
+    for char in first.chars() {
+        let priority = priority_of_item(char)?;
+        if (a & 1u64 << priority) != 0 {
+            return Ok(priority);
+        }
+    }
+
+    Err("Could not find any common item")
 }
 
 #[cfg(test)]
@@ -85,16 +94,22 @@ CrZsJsPPZsGzwwsLwLmpwMDw";
 
     #[test]
     fn priorities_parsing() {
-        assert!(priority_of_item('a') == Some(1));
-        assert!(priority_of_item('b') == Some(2));
-        assert!(priority_of_item('z') == Some(26));
-        assert!(priority_of_item('A') == Some(27));
-        assert!(priority_of_item('Z') == Some(52));
+        assert!(priority_of_item('a') == Ok(1));
+        assert!(priority_of_item('b') == Ok(2));
+        assert!(priority_of_item('z') == Ok(26));
+        assert!(priority_of_item('A') == Ok(27));
+        assert!(priority_of_item('Z') == Ok(52));
     }
 
     #[test]
     fn solution_p1() {
-        let solution = solve_p1(INPUT.lines()).unwrap();
+        let solution = solve_p1(INPUT.lines().into_iter()).unwrap();
         assert!(solution == 157);
+    }
+
+    #[test]
+    fn solution_p2() {
+        let solution = solve_p2(INPUT.lines().into_iter()).unwrap();
+        assert!(solution == 70);
     }
 }

@@ -1,5 +1,8 @@
+use std::env;
+
 use day3::run;
 
 fn main() -> Result<(), &'static str> {
-    run()
+    let filename = env::args().nth(1).ok_or("No filename provided.")?;
+    run(&filename)
 }
