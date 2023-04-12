@@ -1,9 +1,6 @@
 #![feature(iter_array_chunks)]
-use std::{
-    borrow::Borrow,
-    fs::File,
-    io::{BufRead, BufReader},
-};
+use common::lines_from_file;
+use std::borrow::Borrow;
 
 pub fn run(filename: &str) -> Result<(), &'static str> {
     let solution_p1 = solve_p1(lines_from_file(&filename)?)?;
@@ -13,11 +10,6 @@ pub fn run(filename: &str) -> Result<(), &'static str> {
     println!("Part 2 solution: {}", solution_p2);
 
     Ok(())
-}
-
-fn lines_from_file(filename: &str) -> Result<impl Iterator<Item = String>, &'static str> {
-    let file = File::open(&filename).or(Err("Couldn't open file."))?;
-    Ok(BufReader::new(file).lines().map(Result::unwrap))
 }
 
 fn build_base(definition: &&str) -> Result<u64, &'static str> {
