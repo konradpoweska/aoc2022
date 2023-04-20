@@ -3,21 +3,32 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Borrow;
 
-pub fn run(filename: &str) -> Result<(), &'static str> {
-    let mut lines_iter = lines_from_file(&filename)?;
-    let mut stacks = parse_stacks(&mut lines_iter)?;
-    apply_movements(&mut stacks, &mut lines_iter)?;
-    let result = get_top_crates(&stacks)?;
-    println!("Result: {}", &result);
+type Error = &'static str;
+
+pub fn run(filename: &str) -> Result<(), Error> {
+    let lines = lines_from_file(&filename)?;
+    let (stacks, movements) = parse_input(lines)?;
+
+    let result1 = solve(stacks.clone(), &movements, apply_movement_p1)?;
+    let result2 = solve(stacks, &movements, apply_movement_p2)?;
+
+    println!("Result P1: {}", &result1);
+    println!("Result P2: {}", &result2);
     Ok(())
 }
 
 type Stacks = Vec<Stack>;
 type Stack = Vec<char>;
 
-fn parse_stacks(
-    lines_iter: &mut impl Iterator<Item = impl Borrow<str>>,
-) -> Result<Stacks, &'static str> {
+fn parse_input(
+    mut lines_iter: impl Iterator<Item = impl Borrow<str>>,
+) -> Result<(Stacks, Vec<Movement>), Error> {
+    let stacks = parse_stacks(&mut lines_iter)?;
+    let movements = parse_movements(&mut lines_iter)?;
+    Ok((stacks, movements))
+}
+
+fn parse_stacks(lines_iter: &mut impl Iterator<Item = impl Borrow<str>>) -> Result<Stacks, Error> {
     let stacks_lines: Vec<_> = lines_iter
         .by_ref()
         .take_while(|a| !a.borrow().is_empty())
@@ -33,10 +44,7 @@ fn parse_stacks(
             .ok_or("Couldn't parse last number")
     }?;
 
-    let mut stacks: Stacks = Vec::with_capacity(stack_count);
-    for _ in 0..stack_count {
-        stacks.push(Vec::new());
-    }
+    let mut stacks: Stacks = vec![vec![]; stack_count];
 
     for line in from_bottom {
         let chars = line.borrow().chars().skip(1).step_by(4).enumerate();
@@ -50,17 +58,46 @@ fn parse_stacks(
     Ok(stacks)
 }
 
-fn apply_movements(
-    stacks: &mut Stacks,
+fn parse_movements(
     lines_iter: &mut impl Iterator<Item = impl Borrow<str>>,
-) -> Result<(), &'static str> {
-    for line in lines_iter {
-        let Movement { from, to, crates } = Movement::parse(line.borrow())?;
-        for _ in 0..crates {
-            let moved_crate = stacks[from - 1].pop().ok_or("Cannot take crate")?;
-            stacks[to - 1].push(moved_crate);
-        }
+) -> Result<Vec<Movement>, Error> {
+    lines_iter
+        .map(|line| Movement::parse(line.borrow()))
+        .collect()
+}
+
+fn solve(
+    mut stacks: Stacks,
+    movements: &Vec<Movement>,
+    apply_movement: fn(&mut Stacks, &Movement) -> Result<(), Error>,
+) -> Result<String, Error> {
+    for movement in movements {
+        apply_movement(&mut stacks, movement)?;
     }
+    get_top_crates(&stacks)
+}
+
+fn apply_movement_p1(
+    stacks: &mut Stacks,
+    Movement { from, to, crates }: &Movement,
+) -> Result<(), Error> {
+    for _ in 0..*crates {
+        let moved_crate = stacks[from - 1].pop().ok_or("Cannot take crate")?;
+        stacks[to - 1].push(moved_crate);
+    }
+    Ok(())
+}
+
+fn apply_movement_p2(
+    stacks: &mut Stacks,
+    Movement { from, to, crates }: &Movement,
+) -> Result<(), Error> {
+    let idx = stacks[from - 1]
+        .len()
+        .checked_sub(*crates)
+        .ok_or("Not enough crates on this stack")?;
+    let moved_crates = stacks[from - 1].split_off(idx);
+    stacks[to - 1].extend(moved_crates);
     Ok(())
 }
 
@@ -75,7 +112,7 @@ struct Movement {
     to: usize,
 }
 impl Movement {
-    fn parse(line: &str) -> Result<Self, &'static str> {
+    fn parse(line: &str) -> Result<Self, Error> {
         let captures = MOVEMENT_PATTERN
             .captures(line)
             .ok_or("Couldn't parse movement.")?;
@@ -87,7 +124,7 @@ impl Movement {
     }
 }
 
-fn expect_number(captured: Option<regex::Match>) -> Result<usize, &'static str> {
+fn expect_number(captured: Option<regex::Match>) -> Result<usize, Error> {
     captured
         .ok_or("Match not found")?
         .as_str()
@@ -95,7 +132,7 @@ fn expect_number(captured: Option<regex::Match>) -> Result<usize, &'static str> 
         .or(Err("Couldn't parse number"))
 }
 
-fn get_top_crates(stacks: &Stacks) -> Result<String, &'static str> {
+fn get_top_crates(stacks: &Stacks) -> Result<String, Error> {
     stacks
         .iter()
         .map(|s| s.last().ok_or("Can't get top crate: stack is empty"))
@@ -137,11 +174,16 @@ move 1 from 1 to 2
     }
 
     #[test]
-    fn solve() {
-        let mut lines = INPUT.lines();
-        let mut stacks = parse_stacks(&mut lines).unwrap();
-        apply_movements(&mut stacks, &mut lines).unwrap();
-        let result = get_top_crates(&stacks).unwrap();
+    fn solve_p1() {
+        let (stacks, movements) = parse_input(INPUT.lines()).unwrap();
+        let result = solve(stacks, &movements, apply_movement_p1).unwrap();
         assert_eq!(result, "CMZ");
+    }
+
+    #[test]
+    fn solve_p2() {
+        let (stacks, movements) = parse_input(INPUT.lines()).unwrap();
+        let result = solve(stacks, &movements, apply_movement_p2).unwrap();
+        assert_eq!(result, "MCD");
     }
 }
