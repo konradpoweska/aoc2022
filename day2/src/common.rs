@@ -89,7 +89,7 @@ where
         .into_iter()
         .map(|line| {
             let line: &str = line.borrow();
-            let a = line.chars().nth(0).ok_or("No character has been found 0")?;
+            let a = line.chars().next().ok_or("No character has been found 0")?;
             let b = line.chars().nth(2).ok_or("No character has been found 2")?;
             Ok(Letters(a, b))
         })

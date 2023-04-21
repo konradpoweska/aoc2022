@@ -3,8 +3,8 @@ use common::lines_from_file;
 use std::borrow::Borrow;
 
 pub fn run(filename: &str) -> Result<(), &'static str> {
-    let solution_p1 = solve_p1(lines_from_file(&filename)?)?;
-    let solution_p2 = solve_p2(lines_from_file(&filename)?)?;
+    let solution_p1 = solve_p1(lines_from_file(filename)?)?;
+    let solution_p2 = solve_p2(lines_from_file(filename)?)?;
 
     println!("Part 1 solution: {}", solution_p1);
     println!("Part 2 solution: {}", solution_p2);
@@ -18,15 +18,15 @@ fn build_base(definition: &&str) -> Result<u64, &'static str> {
         let priority = priority_of_item(char)?;
         result |= 1u64 << priority;
     }
-    return Ok(result);
+    Ok(result)
 }
 
 fn priority_of_item(char: char) -> Result<u32, &'static str> {
     let item = char as u32;
-    if item >= 65 && item <= 90 {
+    if (65..=90).contains(&item) {
         return Ok(item - 38);
     }
-    if item >= 97 && item <= 122 {
+    if (97..=122).contains(&item) {
         return Ok(item - 96);
     }
     Err("Couldn't parse item")
@@ -95,13 +95,13 @@ CrZsJsPPZsGzwwsLwLmpwMDw";
 
     #[test]
     fn solution_p1() {
-        let solution = solve_p1(INPUT.lines().into_iter()).unwrap();
+        let solution = solve_p1(INPUT.lines()).unwrap();
         assert!(solution == 157);
     }
 
     #[test]
     fn solution_p2() {
-        let solution = solve_p2(INPUT.lines().into_iter()).unwrap();
+        let solution = solve_p2(INPUT.lines()).unwrap();
         assert!(solution == 70);
     }
 }

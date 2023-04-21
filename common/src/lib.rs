@@ -8,7 +8,7 @@ pub fn lines_from_stdin() -> impl Iterator<Item = String> {
 }
 
 pub fn lines_from_file(filename: &str) -> Result<impl Iterator<Item = String>, &'static str> {
-    let file = File::open(&filename).or(Err("Couldn't open file."))?;
+    let file = File::open(filename).or(Err("Couldn't open file."))?;
     Ok(BufReader::new(file)
         .lines()
         .map(|e| e.expect("Invalid line")))

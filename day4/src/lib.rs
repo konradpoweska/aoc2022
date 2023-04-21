@@ -4,8 +4,8 @@ use regex::Regex;
 use std::borrow::Borrow;
 
 pub fn run(filename: &str) -> Result<(), &'static str> {
-    let solution1 = solve(lines_from_file(&filename)?, p1_solver)?;
-    let solution2 = solve(lines_from_file(&filename)?, p2_solver)?;
+    let solution1 = solve(lines_from_file(filename)?, p1_solver)?;
+    let solution2 = solve(lines_from_file(filename)?, p2_solver)?;
     println!("Solution 1: {solution1}");
     println!("Solution 2: {solution2}");
     Ok(())
@@ -91,7 +91,7 @@ mod tests {
     fn contains_same() {
         let line = Line::parse("2-3,2-3").unwrap();
         let result = p1_solver(&line);
-        assert!(result == true);
+        assert!(result);
     }
 
     #[test]

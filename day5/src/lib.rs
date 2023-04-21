@@ -6,7 +6,7 @@ use std::borrow::Borrow;
 type Error = &'static str;
 
 pub fn run(filename: &str) -> Result<(), Error> {
-    let lines = lines_from_file(&filename)?;
+    let lines = lines_from_file(filename)?;
     let (stacks, movements) = parse_input(lines)?;
 
     let result1 = solve(stacks.clone(), &movements, apply_movement_p1)?;
@@ -38,7 +38,7 @@ fn parse_stacks(lines_iter: &mut impl Iterator<Item = impl Borrow<str>>) -> Resu
 
     let stack_count = {
         let numbers_line = from_bottom.next().ok_or("Missing line with numbers.")?;
-        let last_number = numbers_line.borrow().trim().split_whitespace().last();
+        let last_number = numbers_line.borrow().split_whitespace().last();
         last_number
             .and_then(|ln| ln.parse::<usize>().ok())
             .ok_or("Couldn't parse last number")
