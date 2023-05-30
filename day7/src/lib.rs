@@ -10,6 +10,7 @@ type Error = &'static str;
 
 pub fn run(filename: &str) -> Result<(), Error> {
     let root = parse(lines_from_file(filename)?)?;
+    print_tree(&root, 0);
     let (total, solution_p1) = solve_p1(&root);
     println!("Solution P1: {} (total: {total})", solution_p1);
     let (_, solution_p2) = solve_p2(
@@ -175,6 +176,20 @@ impl Directory {
     }
     fn get_size(&self) -> usize {
         self.children.borrow().values().map(Node::get_size).sum()
+    }
+}
+
+fn print_tree(dir: &Directory, depth: usize) {
+    for (name, node) in dir.children.borrow().iter() {
+        match node {
+            Node::File(file) => {
+                println!("{:indent$}📄 {} ({})", "", name, &file.size, indent = depth);
+            }
+            Node::Directory(dir) => {
+                println!("{:indent$}📂 {}", "", name, indent = depth);
+                print_tree(dir, depth + 2);
+            }
+        }
     }
 }
 
