@@ -1,5 +1,5 @@
-use crate::pair::{CoordsIter, Direction, Pair, EAST, NORTH, SOUTH, WEST};
 use crate::Forest;
+use common::pair::{CoordsIter, Direction, Pair, DOWN, LEFT, RIGHT, UP};
 
 pub fn solve(forest: &Forest<u8>) -> usize {
     (1..(forest.size.x - 1))
@@ -10,7 +10,7 @@ pub fn solve(forest: &Forest<u8>) -> usize {
 }
 
 fn get_scenic_score(forest: &Forest<u8>, coords: Pair) -> usize {
-    [NORTH, EAST, SOUTH, WEST]
+    [UP, RIGHT, DOWN, LEFT]
         .into_iter()
         .map(|direction| get_viewing_distance(forest, coords, direction))
         .reduce(|l, r| l * r)

@@ -1,4 +1,5 @@
-use crate::{pair::Pair, Forest};
+use crate::Forest;
+use common::pair::Pair;
 
 pub fn solve(forest: &Forest<u8>) -> usize {
     let trees_visibility = get_trees_visibility(forest);

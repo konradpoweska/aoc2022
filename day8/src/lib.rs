@@ -1,9 +1,8 @@
 use std::borrow::Borrow;
 
 use common::lines_from_file;
-use pair::Pair;
+use common::pair::Pair;
 
-mod pair;
 mod part1;
 mod part2;
 
